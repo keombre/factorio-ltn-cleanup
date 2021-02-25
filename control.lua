@@ -31,7 +31,7 @@ function OnRequesterRemainingCargo(event)
 
     if #fluids > 0 then
         if #fluids > 1 then
-            printAll("Multiple fluids found in train " .. event.train .. ". Now processing " .. fluids[1])
+            printAll("Multiple fluids found in " .. event.train.id .. ". Processing only [fluid=" .. fluids[1] .. "]")
         end
 
         for _, name in pairs(stations) do
@@ -43,7 +43,7 @@ function OnRequesterRemainingCargo(event)
         ::station_fluid_search_done::
 
         if target_station == nil then
-            printAll("No viable station found to process " .. fluids[1])
+            printAll("No viable station found to process [fluid=" .. fluids[1] .. "]")
             return
         end
     else
@@ -61,7 +61,7 @@ function OnRequesterRemainingCargo(event)
         end
     end
 
-    printAll("Sending train " .. train.id .. " to " .. target_station)
+    printAll("Sending train " .. train.id .. " to station " .. target_station)
 
     local record = {station = target_station, wait_conditions = {{type = "empty", compare_type = "or"}, {type = "inactivity", compare_type = "or", ticks = 7200}}}
 
@@ -73,6 +73,12 @@ function OnRequesterRemainingCargo(event)
 end
 
 script.on_load(function(data)
+    if remote.interfaces["logistic-train-network"] then
+        script.on_event(remote.call("logistic-train-network", "on_requester_remaining_cargo"), OnRequesterRemainingCargo)
+    end
+end)
+
+script.on_init(function(data)
     if remote.interfaces["logistic-train-network"] then
         script.on_event(remote.call("logistic-train-network", "on_requester_remaining_cargo"), OnRequesterRemainingCargo)
     end
