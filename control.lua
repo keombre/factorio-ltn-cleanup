@@ -72,8 +72,8 @@ function BuildRecord(station, wait_for)
         table.insert(record.wait_conditions, {type = "fluid_count", condition = {first_signal = {type = "fluid", name = fluid}, comparator = "=", constant = 0}, compare_type = "and"})
     end
 
-    -- todo: load wait time from LTN config
-    table.insert(record.wait_conditions, {type = "time", compare_type = "or", ticks = 7200})
+    local timeout = settings.global["ltn-dispatcher-stop-timeout(s)"].value * 60
+    table.insert(record.wait_conditions, {type = "time", compare_type = "or", ticks = timeout})
     return record
 end
 
