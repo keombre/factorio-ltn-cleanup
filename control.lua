@@ -34,29 +34,6 @@ function ParseStationName(name)
     return list
 end
 
---[[
-    returns:
-    [
-        {
-            name = [station name],
-            process = [
-                {
-                    genericItem = [bool],
-                    items = [
-                        [item name],
-                        ...
-                    ],
-                    fluids = [
-                        [fluid name],
-                        ...
-                    ]
-                },
-                ...
-            ]
-        },
-        ...
-    ]
-]]
 function GetAllCleanupStations()
     local stations = {}
 
@@ -70,20 +47,6 @@ function GetAllCleanupStations()
     return stations
 end
 
-
---[[
-    returns:
-    {
-        items = [
-            [item name],
-            ...
-        ],
-        fluids = [
-            [fluid name],
-            ...
-        ]
-    }
-]]
 function GetAllTrash(train)
     local trash = {items = {}, fuilds = {}}
 
@@ -101,7 +64,7 @@ end
 function BuildRecord(station_name, wait_for)
     local record = {station = station_name, wait_conditions = {}}
 
-    for item in pairs(wait_for) do
+    for item in pairs(wait_for.items) do
         table.insert(record.wait_conditions, {type = "item_count", condition = {first_signal = item, comparator = "=", constant = 0}, compare_type = "and"})
     end
 
@@ -140,7 +103,7 @@ function FindFluidStation(stations, fluid)
     for station in pairs(stations) do
         for f_item in pairs(station.process.fluids) do
             if f_item == item then
-                return station.name
+                return station
             end
         end
     end
@@ -153,14 +116,6 @@ function BuildReverseIndex(values)
     end
     return index
 end
-
--- function GetStation(stations, name)
---     for station in pairs(stations) do
---         if station.name == name then
---             return station
---         end
---     end
--- end
 
 function ProcessAny(station_process, values)
     local index = BuildReverseIndex(values)
@@ -229,12 +184,12 @@ function BuildSchedule(train)
     while #trash.fluids do
         local fluid_station = FindFluidStation(stations, trash.fluids[1])
         if fluid_station == nil
-            PrintAll("No cleanup stations to process" .. PrintFluid(trash.fluids[1]) .. " found")
+            PrintAll("No cleanup stations to process " .. PrintFluid(trash.fluids[1]) .. " found")
             return
         else
             local fluid_resp = ProcessStation(trash.fluids[1], fluid_station)
             trash = fluid_resp.trash
-            table.insert(schedule, BuildRecord(fluid_station, item_resp.wait))
+            table.insert(schedule, BuildRecord(fluid_station, fluid_resp.wait))
         end
     end
 
