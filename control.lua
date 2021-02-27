@@ -1,6 +1,6 @@
 function PrintAll(msg)
     for _, player in pairs(game.players) do
-        player.print("[LTN Cleanup] " .. msg)
+        player.print("[color=green][LTN Cleanup][/color] " .. msg)
     end
 end
 
@@ -10,6 +10,22 @@ end
 
 function PrintFluid(name)
     return "[fluid=" .. name .. "]"
+end
+
+function PrintWarning(msg)
+    PrintAll("[color=#ffa500][font=default-large-bold]Warning![/font][/color] [font=default-large]" .. msg .. "[/font]")
+end
+
+function PrintAlert(msg)
+    PrintAll("[color=#ca0b00][font=default-large-bold]Alert![/font][/color] [font=default-large]" .. msg .. "[/font]")
+end
+
+function PrintInfo(msg)
+    PrintAll("[color=#0023d4][font=default-large-bold]Info[/font][/color] [font=default-large]" .. msg .. "[/font]")
+end
+
+function PrintTrainDepotWarning(train)
+    PrintAlert("Train " .. train.id .. " will arrive at depot with remaining cargo")
 end
 
 function ParseStationName(name)
@@ -155,14 +171,15 @@ function BuildSchedule(train)
     local trash = GetAllTrash(train)
 
     if #trash.items == 0 and #trash.fluids == 0 then
-        PrintAll("LTN marked empty train with remaining cargo. Skipping...")
+        PrintInfo("LTN marked empty train " .. train.id .. " with remaining cargo. Skipping...")
         return
     end
 
     local stations = GetAllCleanupStations()
 
     if #stations == 0 then
-        PrintAll("No cleanup stations found")
+        PrintWarning("No cleanup stations found")
+        PrintTrainDepotWarning(train)
         return
     end
 
@@ -184,7 +201,8 @@ function BuildSchedule(train)
     while #trash.fluids > 0 do
         local fluid_station = FindFluidStation(stations, trash.fluids[1])
         if fluid_station == nil then
-            PrintAll("No cleanup stations to process " .. PrintFluid(trash.fluids[1]) .. " found")
+            PrintWarning("No cleanup stations to process " .. PrintFluid(trash.fluids[1]) .. " found")
+            PrintTrainDepotWarning(train)
             return
         else
             local fluid_resp = ProcessStation(trash, fluid_station)
@@ -201,7 +219,8 @@ function BuildSchedule(train)
             for _, item in pairs(needs_generic) do
                 items = items .. " " .. PrintItem(item)
             end
-            PrintAll("No generic cleanup stations found to process" .. items)
+            PrintWarning("No generic cleanup stations found to process " .. items)
+            PrintTrainDepotWarning(train)
             return
         end
 
@@ -219,7 +238,7 @@ function OnRequesterRemainingCargo(event)
         return
     end
 
-    PrintAll("Cleaning train " .. train.id)
+    PrintInfo("Cleaning train " .. train.id)
 
     local schedule = train.schedule
     local curr = #train.schedule.records + 1
