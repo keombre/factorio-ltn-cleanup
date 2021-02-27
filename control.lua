@@ -284,7 +284,7 @@ function OnTrainChangedState(event)
             if IsCleanupStation(last_record.station) then
                 local trash = GetAllTrash(train)
                 if #trash.items ~= 0 or #trash.fluids ~= 0 then
-                    PrintAlert("Train " .. PrintTrain(train) .. " finished cleaning process with remaining cargo")
+                    PrintTrainDepotWarning(train)
                 end
             end
         end
