@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 2021-02-27
+  Changes:
+    - Print trains in rich text
+  Features:
+    - Print warning if train finishes cleaning with remaining cargo
+---------------------------------------------------------------------------------------------------
 Version: 1.0.6
 Date: 2021-02-27
   Changes:

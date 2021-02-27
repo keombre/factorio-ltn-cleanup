@@ -1,7 +1,5 @@
 function PrintAll(msg)
-    for _, player in pairs(game.players) do
-        player.print("[color=green][LTN Cleanup][/color] " .. msg)
-    end
+    game.print("[color=yellow][LTN Cleanup][/color] " .. msg)
 end
 
 function PrintItem(name)
@@ -12,20 +10,30 @@ function PrintFluid(name)
     return "[fluid=" .. name .. "]"
 end
 
+function PrintTrain(train)
+    if #train.locomotives.front_movers == 0 and #train.locomotives.back_movers == 0 then
+        return "Train " .. train.id
+    elseif #train.locomotives.back_movers == 0 then
+        return "[train=" .. train.locomotives.front_movers[1].unit_number .. "]"
+    else
+        return "[train=" .. train.locomotives.back_movers[1].unit_number .. "]"
+    end
+end
+
 function PrintWarning(msg)
-    PrintAll("[color=#ffa500][font=default-large-bold]Warning![/font][/color] [font=default-large]" .. msg .. "[/font]")
+    PrintAll("[color=#ffa500]Warning:[/color] " .. msg .. "")
 end
 
 function PrintAlert(msg)
-    PrintAll("[color=#ca0b00][font=default-large-bold]Alert![/font][/color] [font=default-large]" .. msg .. "[/font]")
+    PrintAll("[color=#ff2b1f]Alert:[/color] " .. msg .. "")
 end
 
 function PrintInfo(msg)
-    PrintAll("[color=#0023d4][font=default-large-bold]Info[/font][/color] [font=default-large]" .. msg .. "[/font]")
+    PrintAll("[color=#008b8b]Info:[/color] " .. msg .. "")
 end
 
 function PrintTrainDepotWarning(train)
-    PrintAlert("Train " .. train.id .. " will arrive at depot with remaining cargo")
+    PrintAlert("Train " .. PrintTrain(train) .. " will arrive at depot with remaining cargo")
 end
 
 function ParseStationName(name)
@@ -50,11 +58,18 @@ function ParseStationName(name)
     return list
 end
 
+function IsCleanupStation(name)
+    if name ~= nil and string.find(name, "%[virtual%-signal=ltn%-cleanup%-station%]") then
+        return true
+    end
+    return false
+end
+
 function GetAllCleanupStations()
     local stations = {}
 
     for _, station in pairs(game.get_train_stops()) do
-        if string.find(station.backer_name, "%[virtual%-signal=ltn%-cleanup%-station%]") then
+        if IsCleanupStation(station.backer_name) then
             local processes = ParseStationName(station.backer_name)
             table.insert(stations, {name = station.backer_name, process = processes})
         end
@@ -171,7 +186,7 @@ function BuildSchedule(train)
     local trash = GetAllTrash(train)
 
     if #trash.items == 0 and #trash.fluids == 0 then
-        PrintInfo("LTN marked empty train " .. train.id .. " with remaining cargo. Skipping...")
+        PrintInfo("LTN marked empty train " .. PrintTrain(train) .. " with remaining cargo. Skipping...")
         return
     end
 
@@ -238,9 +253,13 @@ function OnRequesterRemainingCargo(event)
         return
     end
 
-    PrintInfo("Cleaning train " .. train.id)
+    PrintInfo("Cleaning train " .. PrintTrain(train))
 
     local schedule = train.schedule
+    if schedule == nil then
+        PrintWarning("Train " .. PrintTrain(train) .. " has empty schedule. Skipping...")
+        return
+    end
     local curr = #train.schedule.records + 1
 
     for _, record in pairs(records) do
@@ -251,9 +270,31 @@ function OnRequesterRemainingCargo(event)
     train.schedule = schedule
 end
 
+function OnTrainChangedState(event)
+    local train = event.train
+
+    if event.old_state == defines.train_state.wait_station and train.state ~= defines.train_state.manual_control and train.state ~= defines.train_state.manual_control_stop then
+        local schedule = train.schedule
+        if schedule == nil or #schedule.records == 0 then
+            return
+        end
+
+        if schedule.current == 1 then
+            local last_record = schedule.records[#schedule.records]
+            if IsCleanupStation(last_record.station) then
+                local trash = GetAllTrash(train)
+                if #trash.items ~= 0 or #trash.fluids ~= 0 then
+                    PrintAlert("Train " .. PrintTrain(train) .. " finished cleaning process with remaining cargo")
+                end
+            end
+        end
+    end
+end
+
 function RegisterCallback()
     if remote.interfaces["logistic-train-network"] then
         script.on_event(remote.call("logistic-train-network", "on_requester_remaining_cargo"), OnRequesterRemainingCargo)
+        script.on_event(defines.events.on_train_changed_state, OnTrainChangedState)
     end
 end
 
