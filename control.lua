@@ -248,6 +248,26 @@ end
 function OnRequesterRemainingCargo(event)
     local train = event.train
 
+    if train.valid ~= true then
+        return
+    end
+
+    if train.state == defines.train_state.manual_control or train.state == defines.train_state.manual_control_stop then
+        PrintWarning("Ignoring manually controlled train " .. PrintTrain(train))
+        return
+    end
+
+    if train.schedule ~= nil and train.schedule.current ~= 1 then
+        PrintWarning("Ignoring train " .. PrintTrain(train) .. " after unexpected schedule alteration")
+        return
+    end
+
+    local schedule = train.schedule
+    if schedule == nil then
+        PrintWarning("Train " .. PrintTrain(train) .. " has empty schedule. Skipping...")
+        return
+    end
+
     local records = BuildSchedule(train)
     if records == nil or #records == 0 then
         return
@@ -255,11 +275,6 @@ function OnRequesterRemainingCargo(event)
 
     PrintInfo("Cleaning train " .. PrintTrain(train))
 
-    local schedule = train.schedule
-    if schedule == nil then
-        PrintWarning("Train " .. PrintTrain(train) .. " has empty schedule. Skipping...")
-        return
-    end
     local curr = #train.schedule.records + 1
 
     for _, record in pairs(records) do
