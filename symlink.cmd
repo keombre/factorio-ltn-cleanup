@@ -1,0 +1,1 @@
+mklink /D %appdata%\Factorio\mods\ltn-cleanup %cd%\src
