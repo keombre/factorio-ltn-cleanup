@@ -1,13 +1,14 @@
 local format = require("format")
 local scheduler = require("scheduler")
 local trains = require("trains")
+local ltn = require("ltn")
 
 local handler = {}
 
 function handler.on_requester_remaining_cargo(event)
     local train = event.train
 
-    if train.valid ~= true then
+    if not train.valid then
         return
     end
 
@@ -26,7 +27,7 @@ function handler.on_requester_remaining_cargo(event)
         return
     end
 
-    local records = scheduler.build(train)
+    local records = scheduler.build(train, event.station.unit_number)
     if records == nil or #records == 0 then
         return
     end
@@ -37,7 +38,7 @@ function handler.on_requester_remaining_cargo(event)
 end
 
 function handler.on_stops_updated(event)
-    -- format.debug(event)
+    ltn.save_stop_update(event.logistic_train_stops)
 end
 
 function handler.on_train_changed_state(event)

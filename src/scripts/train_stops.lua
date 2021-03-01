@@ -1,85 +1,86 @@
 local format = require("format")
+local utils = require("utils")
+local ltn = require("ltn")
 local train_stops = {}
 
-function train_stops.parse_name(name)
-    local list = {
-        generic_item = false,
+function train_stops.is_cleanup(name)
+    return name ~= nil and string.find(name, "%[virtual%-signal=ltn%-cleanup%-station%]")
+end
+
+function train_stops.found_any_stops(stops)
+    return next(stops.stops) ~= nil and next(stops.reverse_lookup) ~= nil
+end
+
+function train_stops.get_all_cleanup(network)
+    local stops = {}
+
+    local reverse_lookup = {
+        generic_item = {},
         items = {},
         fluids = {}
     }
 
-    for word in string.gmatch(name, "%b[]") do
-        if word == "[virtual-signal=ltn-item-cleanup-station]" then
-            list.generic_item = true
-        else
-            local item = string.match(word, "item=(.+)]")
-            if item ~= nil then
-                table.insert(list.items, item)
-            else
-                local fluid = string.match(word, "fluid=(.+)]")
-                if fluid ~= nil then
-                    table.insert(list.fluids, fluid)
+    for _, stop in pairs(game.get_train_stops()) do
+        if stop.valid and train_stops.is_cleanup(stop.backer_name) then
+            if network == nil or not ltn.is_ltn_stop(stop.unit_number) or ltn.get_network(stop.unit_number) == network then
+
+                local processes = {
+                    generic_item = false,
+                    items = {},
+                    fluids = {}
+                }
+
+                for word in string.gmatch(stop.backer_name, "%b[]") do
+                    if word == "[virtual-signal=ltn-item-cleanup-station]" then
+                        processes.generic_item = true
+                        table.insert(reverse_lookup.generic_item, stop.unit_number)
+                    else
+                        local item = string.match(word, "item=(.+)]")
+                        if item ~= nil then
+                            table.insert(processes.items, item)
+                            if reverse_lookup.items[item] == nil then
+                                reverse_lookup.items[item] = {}
+                            end
+                            table.insert(reverse_lookup.items[item], stop.unit_number)
+                        else
+                            local fluid = string.match(word, "fluid=(.+)]")
+                            if fluid ~= nil then
+                                table.insert(processes.fluids, fluid)
+                                if reverse_lookup.fluids[fluid] == nil then
+                                    reverse_lookup.fluids[fluid] = {}
+                                end
+                                table.insert(reverse_lookup.fluids[fluid], stop.unit_number)
+                            end
+                        end
+                    end
                 end
+
+                stops[stop.unit_number] = {
+                    name = stop.backer_name,
+                    process = processes
+                }
             end
         end
     end
 
-    return list
-end
-
-function train_stops.is_cleanup(name)
-    if name ~= nil and string.find(name, "%[virtual%-signal=ltn%-cleanup%-station%]") then
-        return true
-    end
-    return false
-end
-
-function train_stops.get_all_cleanup()
-    local stops = {}
-
-    for _, stop in pairs(game.get_train_stops()) do
-        if train_stops.is_cleanup(stop.backer_name) then
-            local processes = train_stops.parse_name(stop.backer_name)
-            table.insert(stops, {
-                id = stop.unit_number,
-                name = stop.backer_name,
-                process = processes
-            })
-        end
-    end
-
-    return stops
+    return {stops = stops, reverse_lookup = reverse_lookup}
 end
 
 function train_stops.find_generic_item(stops)
-    local generic = {}
-    for _, stop in pairs(stops) do
-        if stop.process.generic_item then
-            table.insert(generic, stop)
-        end
-    end
-    if #generic ~= 0 then
-        return generic[math.random(#generic)]
+    if #stops.reverse_lookup.generic_item ~= 0 then
+        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.generic_item)]
     end
 end
 
 function train_stops.find_item(stops, item)
-    for _, stop in pairs(stops) do
-        for _, f_item in pairs(stop.process.items) do
-            if f_item == item then
-                return stop
-            end
-        end
+    if stops.reverse_lookup.items[item] ~= nil then
+        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.items[item])]
     end
 end
 
 function train_stops.find_fluid(stops, fluid)
-    for _, stop in pairs(stops) do
-        for _, f_fluid in pairs(stop.process.fluids) do
-            if f_fluid == fluid then
-                return stop
-            end
-        end
+    if stops.reverse_lookup.fluids[fluid] ~= nil then
+        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.fluids[fluid])]
     end
 end
 

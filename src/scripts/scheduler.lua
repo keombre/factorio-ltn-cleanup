@@ -3,8 +3,12 @@ local utils = require("utils")
 local trains = require("trains")
 local format = require("format")
 local train_stops = require("train_stops")
+local ltn = require("ltn")
 
 local scheduler = {}
+
+-- todo: ignore cleanup stops from different network
+--       ignore cleanup stops with invalid train length
 
 function scheduler.build_record(stop, wait)
     local record = {
@@ -93,7 +97,7 @@ function scheduler.process_stop(trash, stop)
     }
 end
 
-function scheduler.build(train)
+function scheduler.build(train, request_stop_id)
     local trash = trains.get_all_trash(train)
 
     if #trash.items == 0 and #trash.fluids == 0 then
@@ -101,9 +105,9 @@ function scheduler.build(train)
         return
     end
 
-    local stops = train_stops.get_all_cleanup()
+    local stops = train_stops.get_all_cleanup(ltn.get_network(request_stop_id))
 
-    if #stops == 0 then
+    if not train_stops.found_any_stops(stops) then
         format.warning("No cleanup stops found")
         format.train_depot_alert(train)
         return
@@ -127,7 +131,7 @@ function scheduler.build(train)
     while #trash.fluids > 0 do
         local fluid_stop = train_stops.find_fluid(stops, trash.fluids[1])
         if fluid_stop == nil then
-            format.warning("No cleanup stops to process " .. format.train(trash.fluids[1]) .. " found")
+            format.warning("No cleanup stops to process " .. format.fluid(trash.fluids[1]) .. " found")
             format.train_depot_alert(train)
             return
         else
@@ -158,7 +162,5 @@ function scheduler.build(train)
 
     return schedule
 end
-
-
 
 return scheduler
