@@ -6,6 +6,6 @@ all: zip
 zip:
 	rm -rf $(BUILD)
 	mkdir -p $(BUILD)
-	rsync -av ./src $(BUILD)/ltn-cleanup_$(VERSION) --exclude __debug
+	rsync -av ./src/ $(BUILD)/ltn-cleanup_$(VERSION) --exclude __debug
 	cd $(BUILD) && zip -r ./ltn-cleanup_$(VERSION).zip ./ltn-cleanup_$(VERSION) && cd ..
 	rm -r $(BUILD)/ltn-cleanup_$(VERSION)
