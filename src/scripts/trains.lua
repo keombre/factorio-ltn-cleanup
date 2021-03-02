@@ -40,14 +40,19 @@ function trains.finished_cleaning(train)
         if schedule.current == 1 then
             local last_record = schedule.records[#schedule.records]
             if train_stops.is_cleanup(last_record.station) then
-                local trash = trains.get_all_trash(train)
-                if #trash.items ~= 0 or #trash.fluids ~= 0 then
-                    return true
-                end
+                return true
             end
         end
     end
     return false
+end
+
+function trains.has_trash(train)
+    return next(train.get_contents()) ~= nil or next(train.get_fluid_contents()) ~= nil
+end
+
+function trains.count_carriages(train)
+    return #train.carriages
 end
 
 return trains

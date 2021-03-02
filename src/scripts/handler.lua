@@ -42,8 +42,8 @@ function handler.on_stops_updated(event)
 end
 
 function handler.on_train_changed_state(event)
-    if event.old_state == defines.train_state.wait_station and trains.finished_cleaning(event.train) then
-        format.train_depot_alert(event.train)
+    if event.old_state == defines.train_state.wait_station then
+        scheduler.train_left_station(event.train)
     end
 end
 

@@ -7,9 +7,6 @@ local ltn = require("ltn")
 
 local scheduler = {}
 
--- todo: ignore cleanup stops from different network
---       ignore cleanup stops with invalid train length
-
 function scheduler.build_record(stop, wait)
     local record = {
         station = stop.name,
@@ -105,7 +102,7 @@ function scheduler.build(train, request_stop_id)
         return
     end
 
-    local stops = train_stops.get_all_cleanup(ltn.get_network(request_stop_id))
+    local stops = train_stops.get_all_cleanup(ltn.get_network(request_stop_id), trains.count_carriages(train))
 
     if not train_stops.found_any_stops(stops) then
         format.warning("No cleanup stops found")
@@ -122,9 +119,10 @@ function scheduler.build(train, request_stop_id)
             table.insert(needs_generic, trash.items[1])
             table.remove(trash.items, 1)
         else
-            local item_resp = scheduler.process_stop(trash, item_stop)
+            local item_resp = scheduler.process_stop(trash, item_stop.stop)
             trash = item_resp.trash
-            table.insert(schedule, scheduler.build_record(item_stop, item_resp.wait))
+            ltn.lamp_activate(item_stop.id)
+            table.insert(schedule, scheduler.build_record(item_stop.stop, item_resp.wait))
         end
     end
 
@@ -135,9 +133,10 @@ function scheduler.build(train, request_stop_id)
             format.train_depot_alert(train)
             return
         else
-            local fluid_resp = scheduler.process_stop(trash, fluid_stop)
+            local fluid_resp = scheduler.process_stop(trash, fluid_stop.stop)
             trash = fluid_resp.trash
-            table.insert(schedule, scheduler.build_record(fluid_stop, fluid_resp.wait))
+            ltn.lamp_activate(fluid_stop.id)
+            table.insert(schedule, scheduler.build_record(fluid_stop.stop, fluid_resp.wait))
         end
     end
 
@@ -154,13 +153,21 @@ function scheduler.build(train, request_stop_id)
             return
         end
 
-        table.insert(schedule, scheduler.build_record(generic_stop, {
+        ltn.lamp_activate(generic_stop.id)
+        table.insert(schedule, scheduler.build_record(generic_stop.stop, {
             items = needs_generic,
             fluids = {}
         }))
     end
 
     return schedule
+end
+
+function scheduler.train_left_station(train)
+    -- todo: turn off lamps
+    if trains.finished_cleaning(train) and trains.has_trash(train) then
+        format.train_depot_alert(train)
+    end
 end
 
 return scheduler

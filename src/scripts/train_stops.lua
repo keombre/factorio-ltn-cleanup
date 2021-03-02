@@ -11,7 +11,7 @@ function train_stops.found_any_stops(stops)
     return next(stops.stops) ~= nil and next(stops.reverse_lookup) ~= nil
 end
 
-function train_stops.get_all_cleanup(network)
+function train_stops.get_all_cleanup(network, carriages)
     local stops = {}
 
     local reverse_lookup = {
@@ -22,7 +22,8 @@ function train_stops.get_all_cleanup(network)
 
     for _, stop in pairs(game.get_train_stops()) do
         if stop.valid and train_stops.is_cleanup(stop.backer_name) then
-            if network == nil or not ltn.is_ltn_stop(stop.unit_number) or ltn.get_network(stop.unit_number) == network then
+            if network == nil or not ltn.is_ltn_stop(stop.unit_number) or
+                (ltn.get_network(stop.unit_number) == network and ltn.is_carriage_in_limit(carriages)) then
 
                 local processes = {
                     generic_item = false,
@@ -63,24 +64,39 @@ function train_stops.get_all_cleanup(network)
         end
     end
 
-    return {stops = stops, reverse_lookup = reverse_lookup}
+    return {
+        stops = stops,
+        reverse_lookup = reverse_lookup
+    }
 end
 
 function train_stops.find_generic_item(stops)
     if #stops.reverse_lookup.generic_item ~= 0 then
-        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.generic_item)]
+        local id = utils.get_first_or_random(stops.reverse_lookup.generic_item)
+        return {
+            stop = stops.stops[id],
+            id = id
+        }
     end
 end
 
 function train_stops.find_item(stops, item)
     if stops.reverse_lookup.items[item] ~= nil then
-        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.items[item])]
+        local id = utils.get_first_or_random(stops.reverse_lookup.items[item])
+        return {
+            stop = stops.stops[id],
+            id = id
+        }
     end
 end
 
 function train_stops.find_fluid(stops, fluid)
     if stops.reverse_lookup.fluids[fluid] ~= nil then
-        return stops.stops[utils.get_first_or_random(stops.reverse_lookup.fluids[fluid])]
+        local id = utils.get_first_or_random(stops.reverse_lookup.fluids[fluid])
+        return {
+            stop = stops.stops[id],
+            id = id
+        }
     end
 end
 
