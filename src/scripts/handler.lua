@@ -43,7 +43,7 @@ end
 
 function handler.on_train_changed_state(event)
     if event.old_state == defines.train_state.wait_station then
-        scheduler.train_left_station(event.train)
+        scheduler.train_left_stop(event.train)
     end
 end
 

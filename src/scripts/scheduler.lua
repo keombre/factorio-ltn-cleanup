@@ -51,6 +51,21 @@ function scheduler.build_record(stop, wait)
     return record
 end
 
+function scheduler.build_temp_record(stop_id)
+    local rail = ltn.get_rail(stop_id)
+    if rail ~= nil then
+        return {
+            rail = rail,
+            wait_conditions = {{
+                type = "time",
+                compare_type = "or",
+                ticks = 0
+            }},
+            temporary = true
+        }
+    end
+end
+
 function scheduler.process_any(processes, values)
     local index = utils.build_reverse_index(values)
     local wait = {}
@@ -121,7 +136,10 @@ function scheduler.build(train, request_stop_id)
         else
             local item_resp = scheduler.process_stop(trash, item_stop.stop)
             trash = item_resp.trash
-            ltn.lamp_activate(item_stop.id)
+            local temp = scheduler.build_temp_record(item_stop.id)
+            if temp ~= nil then
+                table.insert(schedule, temp)
+            end
             table.insert(schedule, scheduler.build_record(item_stop.stop, item_resp.wait))
         end
     end
@@ -135,7 +153,10 @@ function scheduler.build(train, request_stop_id)
         else
             local fluid_resp = scheduler.process_stop(trash, fluid_stop.stop)
             trash = fluid_resp.trash
-            ltn.lamp_activate(fluid_stop.id)
+            local temp = scheduler.build_temp_record(fluid_stop.id)
+            if temp ~= nil then
+                table.insert(schedule, temp)
+            end
             table.insert(schedule, scheduler.build_record(fluid_stop.stop, fluid_resp.wait))
         end
     end
@@ -152,8 +173,10 @@ function scheduler.build(train, request_stop_id)
             format.train_depot_alert(train)
             return
         end
-
-        ltn.lamp_activate(generic_stop.id)
+        local temp = scheduler.build_temp_record(generic_stop.id)
+        if temp ~= nil then
+            table.insert(schedule, temp)
+        end
         table.insert(schedule, scheduler.build_record(generic_stop.stop, {
             items = needs_generic,
             fluids = {}
@@ -163,8 +186,7 @@ function scheduler.build(train, request_stop_id)
     return schedule
 end
 
-function scheduler.train_left_station(train)
-    -- todo: turn off lamps
+function scheduler.train_left_stop(train)
     if trains.finished_cleaning(train) and trains.has_trash(train) then
         format.train_depot_alert(train)
     end
