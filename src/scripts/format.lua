@@ -1,14 +1,14 @@
-local status, serpent = pcall(require, "__debug/serpent")
 local format = {}
-
-if status then
-    function format.debug(msg)
-        game.print(serpent.line(msg))
-    end
-else
-    function format.debug(msg)
-    end
-end
+-- local status, serpent = pcall(require, "__debug/serpent")
+-- 
+-- if status then
+--     function format.debug(msg)
+--         game.print(serpent.line(msg))
+--     end
+-- else
+--     function format.debug(msg)
+--     end
+-- end
 
 function format.all(msg)
     game.print("[color=yellow][LTN Cleanup][/color] " .. msg)
