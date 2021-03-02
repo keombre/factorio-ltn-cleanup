@@ -43,6 +43,14 @@ An example is worth a thousand words
 
 Of course, you don't need to write it by hand, Factorio has a rich text editor built right in.
 
+### LTN stop vs Vanilla
+You can use either vanilla or LTN stops for cleanup. However, LTN stops allow you to set some limits on trains.
+This mod currently supports the following signals from LTN:
+
+ - Minimum train length
+ - Maximum train length
+ - Encoded Network ID
+
 ### Automated fluid stop generation
 
 If you can't be bothered to set up your fluid void stops (as I couldn't) have a look at this little project: https://github.com/keombre/factorio-ltn-cleanup-station-gen
