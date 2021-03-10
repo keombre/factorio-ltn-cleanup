@@ -2,6 +2,16 @@ local train_stops = require("train_stops")
 
 local trains = {}
 
+function trains.find_train(train_id)
+    for _, surface in pairs(game.surfaces) do
+        for _, train in pairs(surface.get_trains()) do
+            if train.id == train_id then
+                return train
+            end
+        end
+    end
+end
+
 function trains.get_all_trash(train)
     local trash = {items = {}, fluids = {}}
 

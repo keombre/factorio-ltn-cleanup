@@ -112,11 +112,6 @@ end
 function scheduler.build(train, request_stop_id)
     local trash = trains.get_all_trash(train)
 
-    if #trash.items == 0 and #trash.fluids == 0 then
-        format.info("LTN marked empty train " .. format.train(train) .. " with remaining cargo. Skipping...")
-        return
-    end
-
     local stops = train_stops.get_all_cleanup(ltn.get_network(request_stop_id), trains.count_carriages(train))
 
     if not train_stops.found_any_stops(stops) then

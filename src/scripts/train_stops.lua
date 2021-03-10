@@ -23,7 +23,7 @@ function train_stops.get_all_cleanup(network, carriages)
     for _, stop in pairs(game.get_train_stops()) do
         if stop.valid and train_stops.is_cleanup(stop.backer_name) then
             if network == nil or not ltn.is_ltn_stop(stop.unit_number) or
-                (ltn.get_network(stop.unit_number) == network and ltn.is_carriage_in_limit(stop.unit_number, carriages)) then
+                (bit32.band(ltn.get_network(stop.unit_number), network) ~= 0 and ltn.is_carriage_in_limit(stop.unit_number, carriages)) then
 
                 local processes = {
                     generic_item = false,
