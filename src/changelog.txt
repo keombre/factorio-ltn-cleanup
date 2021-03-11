@@ -6,6 +6,8 @@ Date: 2021-03-10
     - Fix disabled stop timeout
   Features:
     - Add option to clean failed deliveries
+  Changes:
+    - Change LTN dependency to 1.15.5
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.10
 Date: 2021-03-02
