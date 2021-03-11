@@ -43,11 +43,14 @@ function scheduler.build_record(stop, wait)
         })
     end
 
-    table.insert(record.wait_conditions, {
-        type = "time",
-        compare_type = "or",
-        ticks = config.stop_timeout()
-    })
+    local timeout = config.stop_timeout()
+    if timeout ~= nil and timeout ~= 0 then
+        table.insert(record.wait_conditions, {
+            type = "time",
+            compare_type = "or",
+            ticks = timeout
+        })
+    end
     return record
 end
 
