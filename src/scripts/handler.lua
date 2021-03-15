@@ -96,7 +96,7 @@ function handler.traceback(err)
     -- message = message .. "\n\nltn status:\n" .. serpent.block(global.last_ltn_update)
     game.write_file("ltn-cleanup-debug-" .. game.tick .. ".log", message)
 
-    format.show_fatal(err, "Debug info written to [font=default-bold]'./script-output/ltn-cleanup-debug.log'[/font].\n\nPlease post contents of this file to the mod portal.\nThank you ☺️\n")
+    format.fatal(err, "Debug info written to [font=default-bold]'./script-output/ltn-cleanup-debug.log'[/font].\n\nPlease post contents of this file to the mod portal.\nThank you ☺️\n")
 end
 
 function handler.error_handler(callable, event)
