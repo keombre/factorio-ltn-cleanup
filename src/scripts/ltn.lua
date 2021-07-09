@@ -89,7 +89,10 @@ end
 
 function ltn.get_stop_name(stop_id)
     if ltn.is_ltn_stop(stop_id) then
-        return global.last_ltn_update[stop_id].entity.backer_name
+        local entity = global.last_ltn_update[stop_id].entity
+        if entity.valid then
+            return entity.backer_name
+        end
     end
 end
 
