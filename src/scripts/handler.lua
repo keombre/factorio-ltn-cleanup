@@ -111,6 +111,29 @@ function handler.error_handler(callable, event)
     end
 end
 
+function handler.register_callbacks_init()
+    if global.last_ltn_update == nil then
+        global.last_ltn_update = {}
+    end
+
+    if global.delta_at_limit == nil then
+        global.delta_at_limit = {}
+    end
+
+    if global.delta_below_limit == nil then
+        global.delta_below_limit = {}
+    end
+
+    if global.gui_players == nil then
+        global.gui_players = {}
+        for index, _ in pairs(game.players) do
+            global.gui_players[index] = { elements = {} }
+        end
+    end
+
+    handler.register_callbacks()
+end
+
 function handler.register_callbacks()
     if remote.interfaces["logistic-train-network"] then
         script.on_event(remote.call("logistic-train-network", "on_requester_remaining_cargo"), function (event) handler.error_handler(handler.on_requester_remaining_cargo, event) end)

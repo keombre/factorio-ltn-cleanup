@@ -127,6 +127,9 @@ function gui.add_row(frame, color, type, name, delta, count, stop_id)
 end
 
 function gui.any_open()
+    if global.gui_players == nil then
+        return false
+    end
     for _, player in pairs(global.gui_players) do
         if player.elements.content_frame ~= nil then
             return true
