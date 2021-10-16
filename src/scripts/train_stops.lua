@@ -4,7 +4,8 @@ local ltn = require("ltn")
 local train_stops = {}
 
 function train_stops.is_cleanup(name)
-    return name ~= nil and string.find(name, "%[virtual%-signal=ltn%-cleanup%-station%]")
+    return name ~= nil and (string.find(name, "%[virtual%-signal=ltn%-cleanup%-station%]")
+                                or string.find(name, "%[img=virtual%-signal/ltn%-cleanup%-station%]"))
 end
 
 function train_stops.found_any_stops(stops)
