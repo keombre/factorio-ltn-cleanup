@@ -16,4 +16,12 @@ function config.failed_trains()
     return config.get_me("failed-trains")
 end
 
+function config.min_fuel()
+    return config.get_me("min-fuel-value")
+end
+
+function config.depot_inactivity()
+    return config.get_ltn("depot-inactivity(s)") * 60
+end
+
 return config

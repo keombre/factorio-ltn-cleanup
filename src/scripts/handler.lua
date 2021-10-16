@@ -80,6 +80,38 @@ function handler.on_delivery_failed(event)
     end
 end
 
+function handler.on_delivery_completed(event)
+    local min_fuel = config.min_fuel()
+    if min_fuel == 0 then
+        return
+    end
+
+    local train = trains.find_train(event.train_id)
+
+    if not handler.is_train_valid(train) then
+        return
+    end
+
+    if train == nil or not trains.needs_fuel(train, min_fuel) then
+        -- Telling about every train we don't refuel gets too much
+        -- format.info("Leaving fueled train " .. format.train(train) .. " alone")
+        return
+    end
+
+    local records = scheduler.build_refuel(train)
+    if records == nil or #records == 0 then
+        return
+    end
+
+    if trains.was_at_requester(train) then
+        trains.update_schedule(train, records, true)
+        format.info("Refueling train " .. format.train(train))
+    else
+        trains.update_schedule(train, records, false)
+        format.info("Adding mandatory refueling to failed train " .. format.train(train))
+    end
+end
+
 function handler.on_stops_updated(event)
     ltn.save_stop_update(event.logistic_train_stops)
 end
@@ -122,6 +154,7 @@ function handler.register_callbacks()
     if remote.interfaces["logistic-train-network"] then
         script.on_event(remote.call("logistic-train-network", "on_requester_remaining_cargo"), function (event) handler.error_handler(handler.on_requester_remaining_cargo, event) end)
         script.on_event(remote.call("logistic-train-network", "on_delivery_failed"), function (event) handler.error_handler(handler.on_delivery_failed, event) end)
+        script.on_event(remote.call("logistic-train-network", "on_delivery_completed"), function (event) handler.error_handler(handler.on_delivery_completed, event) end)
         script.on_event(remote.call("logistic-train-network", "on_stops_updated"), function (event) handler.error_handler(handler.on_stops_updated, event) end)
         script.on_event(defines.events.on_train_changed_state, function (event) handler.error_handler(handler.on_train_changed_state, event) end)
     end

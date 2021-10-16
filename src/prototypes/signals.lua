@@ -14,5 +14,13 @@ data:extend({
         icon_size = 64, icon_mipmaps = 4,
         subgroup = "LTN-signal",
         order = "e-a"
-    }
+    },
+    {
+        type = "virtual-signal",
+        name = "ltn-refuel-station",
+        icon = "__ltn-cleanup__/graphics/signals/signal_refuel.png",
+        icon_size = 64, icon_mipmaps = 4,
+        subgroup = "LTN-signal",
+        order = "e-a"
+    },
 })
