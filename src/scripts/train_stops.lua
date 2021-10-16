@@ -9,7 +9,8 @@ function train_stops.is_cleanup(name)
 end
 
 function train_stops.is_refuel(name)
-    return name ~= nil and string.find(name, "%[virtual%-signal=ltn%-refuel%-station%]")
+    return name ~= nil and (string.find(name, "%[virtual%-signal=ltn%-refuel%-station%]")
+                                or string.find(name, "%[img=virtual%-signal/ltn%-refuel%-station%]"))
 end
 
 function train_stops.found_any_stops(stops)
