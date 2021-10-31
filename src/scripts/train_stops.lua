@@ -71,6 +71,14 @@ function train_stops.get_all_cleanup(network, carriages, surface)
     }
 end
 
+function train_stops.find_depot(name, surface)
+    for _, stop in pairs(game.get_train_stops({name=name, surface=surface})) do
+        if stop.valid and ltn.is_ltn_stop(stop.unit_number) then
+            return stop
+        end
+    end
+end
+
 function train_stops.find_generic_item(stops)
     if #stops.reverse_lookup.generic_item ~= 0 then
         local id = utils.get_first_or_random(stops.reverse_lookup.generic_item)
