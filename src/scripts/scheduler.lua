@@ -201,6 +201,51 @@ function scheduler.build(train, request_stop_id)
     return schedule
 end
 
+function scheduler.build_refuel(train)
+    local surface = trains.get_surface(train)
+    if surface == nil then
+        format.warning("Failed to determine train's surface")
+        return
+    end
+
+    local depot_stop_id = nil
+    local depot_record = train.schedule.records[1]
+    local depot_name = depot_record.station
+    if depot_name ~= nil then
+        local depot_stop = train_stops.find_depot(depot_name, surface)
+        if depot_stop ~= nil then
+            depot_stop_id = depot_stop.unit_number
+        end
+    end
+
+    local stops = train_stops.get_all_refuel(ltn.get_network(depot_stop_id), trains.count_carriages(train), surface)
+    if not (next(stops) ~= nil) then
+        format.warning("No refueling stops found")
+        format.train_refuel_alert(train)
+        return
+    end
+
+    local refuel_stop = utils.get_first_or_random(stops)
+    local schedule = {}
+    local temp = scheduler.build_temp_record(refuel_stop.id)
+    if temp ~= nil then
+        table.insert(schedule, temp)
+    end
+    local record = {
+        station = refuel_stop.name,
+        wait_conditions = {}
+    }
+    local timeout = config.depot_inactivity()
+    table.insert(record.wait_conditions, {
+        type = "inactivity",
+        compare_type = "or",
+        ticks = timeout
+    })
+    table.insert(schedule, record)
+
+    return schedule
+end
+
 function scheduler.train_left_stop(train)
     if trains.finished_cleaning(train) and trains.has_trash(train) then
         format.train_depot_alert(train)

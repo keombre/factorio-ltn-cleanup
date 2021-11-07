@@ -42,6 +42,10 @@ function format.train_depot_alert(train)
     format.alert("Train " .. format.train(train) .. " will arrive at depot with remaining cargo")
 end
 
+function format.train_refuel_alert(train)
+    format.alert("Train " .. format.train(train) .. " will continue low on fuel")
+end
+
 function format.fatal(error, msg)
     if game.is_multiplayer() then
         format.all("[color=#ff174d]Fatal error:[/color] " .. serpent.line(error) .. "\n" .. msg)

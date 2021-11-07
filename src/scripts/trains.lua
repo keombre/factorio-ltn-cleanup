@@ -63,6 +63,27 @@ function trains.has_trash(train)
     return next(train.get_contents()) ~= nil or next(train.get_fluid_contents()) ~= nil
 end
 
+function trains.needs_fuel(train, min_fuel)
+    -- fuel calculations from the Train Refuel Station mod by stever1388
+    local needs_fuel = false;
+    for key, locos in pairs(train.locomotives) do  -- loop through the front and back movers of the train
+        for index, entity in ipairs(locos) do -- loop through the actual locomotives
+            local fuel_inv = entity.get_fuel_inventory();
+            local total_fuel = entity.burner.remaining_burning_fuel;
+            for index = 1, #fuel_inv do
+               local slot = fuel_inv[index]
+                if slot.valid_for_read then
+                    total_fuel = total_fuel + (slot.count * slot.prototype.fuel_value);
+                end
+            end
+            if (total_fuel / 1000000) <= min_fuel then
+                needs_fuel = true
+            end
+        end
+    end
+    return needs_fuel
+end
+
 function trains.count_carriages(train)
     return #train.carriages
 end
